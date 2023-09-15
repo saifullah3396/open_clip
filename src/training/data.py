@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torchvision.datasets as datasets
+from training.datasets.iitcdip import IITCDIPDataset
 import webdataset as wds
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, IterableDataset, get_worker_info
@@ -521,9 +522,37 @@ def get_synthetic_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None
 
     return DataInfo(dataloader, sampler)
 
+def get_custom_dataset(args, preprocess_fn, is_train, epoch=0, tokenizer=None):
+    image_size = preprocess_fn.transforms[0].size
+    if is_train:
+        data_path = args.train_data
+    else:
+        data_path = args.val_data        
+    dataset = IITCDIPDataset(
+        data_path=data_path, transform=preprocess_fn, tokenizer=tokenizer, split='train' if is_train else 'val')
+    num_samples = len(dataset)
+    sampler = DistributedSampler(dataset) if args.distributed and is_train else None
+    shuffle = is_train and sampler is None
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=shuffle,
+        num_workers=args.workers,
+        pin_memory=True,
+        sampler=sampler,
+        drop_last=is_train,
+    )
+    dataloader.num_samples = num_samples
+    dataloader.num_batches = len(dataloader)
+
+    return DataInfo(dataloader, sampler)
+
 
 def get_dataset_fn(data_path, dataset_type):
-    if dataset_type == "webdataset":
+    if dataset_type == "custom":
+        return get_custom_dataset
+    elif dataset_type == "webdataset":
         return get_wds_dataset
     elif dataset_type == "csv":
         return get_csv_dataset

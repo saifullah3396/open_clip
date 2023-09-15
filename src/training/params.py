@@ -26,6 +26,12 @@ class ParseKwargs(argparse.Action):
 def parse_args(args):
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--test-run",
+        type=bool,
+        default=False,
+        help="Test run for debugging",
+    )
+    parser.add_argument(
         "--train-data",
         type=str,
         default=None,
@@ -61,7 +67,7 @@ def parse_args(args):
     )
     parser.add_argument(
         "--dataset-type",
-        choices=["webdataset", "csv", "synthetic", "auto"],
+        choices=["webdataset", "csv", "synthetic", "auto", "custom"],
         default="auto",
         help="Which type of dataset to process."
     )
