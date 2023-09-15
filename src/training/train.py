@@ -93,6 +93,18 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
         texts = texts.to(device=device, non_blocking=True)
         
         if args.test_run:
+            OPENAI_DATASET_MEAN = (0.48145466, 0.4578275, 0.40821073)
+            OPENAI_DATASET_STD = (0.26862954, 0.26130258, 0.27577711)
+
+            for image in images:
+                
+                import matplotlib.pyplot as plt
+                image = image.detach().permute(1,2,0).cpu().numpy()
+                image[:, :, 0] = image[:, :, 0] * OPENAI_DATASET_STD[0] + OPENAI_DATASET_MEAN[0]
+                image[:, :, 1] = image[:, :, 1] * OPENAI_DATASET_STD[1] + OPENAI_DATASET_MEAN[1]
+                image[:, :, 2] = image[:, :, 2] * OPENAI_DATASET_STD[2] + OPENAI_DATASET_MEAN[2]
+                plt.imshow(image)
+                plt.show()
             print(images[0], texts[0], images.shape, texts.shape[0])
             exit()
         

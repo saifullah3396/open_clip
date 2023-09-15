@@ -344,6 +344,8 @@ def create_model_and_transforms(
         mean=image_mean,
         std=image_std,
     )
+    print("preprocess_train: ", preprocess_train)
+    print("preprocess_val: ", preprocess_val)
 
     return model, preprocess_train, preprocess_val
 
