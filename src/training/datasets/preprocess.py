@@ -19,12 +19,12 @@ def parse_args():
         "--split", default="train", help="Which dataset split to preprocess."
     )
 
-    args = parser.parse_args(args)
+    args = parser.parse_args()
     return args
 
 
 def main():
-    args = parse_args
+    args = parse_args()
 
     # load dataset
     dataset = IITCDIPDatasetPreprocessor(
@@ -34,7 +34,7 @@ def main():
 
     # create dataloader
     dataloader = DataLoader(
-        dataset, batch_size=100, num_workers=8, shuffle=False, collate_fn=lambda x: x
+        dataset, batch_size=100, num_workers=0, shuffle=False, collate_fn=lambda x: x
     )
 
     # generate output filename

@@ -10,6 +10,7 @@ import numpy as np
 from training.datasets.constants import MSGPACK_FILES
 from PIL import Image
 import xml.dom.minidom
+from urllib.request import urlopen
 import pickle
 
 TRAIN_FILES = 125
@@ -17,7 +18,7 @@ TRAIN_MSGPACK_FILES = MSGPACK_FILES[:TRAIN_FILES]
 
 VAL_FILES = 2
 VAL_MSGPACK_FILES = MSGPACK_FILES[TRAIN_FILES : TRAIN_FILES + VAL_FILES]
-
+RVLCDIP_PATH = './rvlcdip_labels/'
 
 class GrayScaleToRGB:
     """
@@ -100,6 +101,7 @@ class IITCDIPDataset(Dataset):
         if self.transform is not None:
             sample["image"] = self.transform(sample["image"])
 
+        print('sample', sample['caption'])
         return sample["image"], self.tokenizer(sample["caption"])[0]
 
     def __len__(self):
@@ -107,10 +109,27 @@ class IITCDIPDataset(Dataset):
 
 
 class IITCDIPDatasetPreprocessor(IITCDIPDataset):
+    def __init__(self, data_path, split="train", transform=None, tokenizer=None):
+        super().__init__(data_path, split, transform, tokenizer)
+        self.rvlcdip_paths = []
+        for split in ['train', 'test', 'val']:
+            label_file = RVLCDIP_PATH + split + '.txt'
+            with open(label_file, 'r') as f:
+                for line in f.readlines():
+                    self.rvlcdip_paths.append(line.split(' ')[0].strip())
+        self.rvlcdip_overlap_count = 0
+        
     def __getitem__(self, index):
         try:
             # load sample
             sample = self.get_sample(index)
+            
+            # see if this sample overlaps with RVL-CDIP
+            if sample['image_file_path'] in self.rvlcdip_paths:
+                print("path in rvldcip found", sample['image_file_path'])   
+                print('self.rvlcdip_overlap_count', self.rvlcdip_overlap_count)
+                self.rvlcdip_overlap_count+=1
+                return index, 0, ""
 
             if "xml_file" not in sample:
                 return index, 0, ""
