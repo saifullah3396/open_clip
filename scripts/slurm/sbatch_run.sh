@@ -2,17 +2,18 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 CMD=
-IMAGE=/netscratch/$USER/envs/TORCH_FUSION_v4.sqsh
+IMAGE_VER=5
+IMAGE=/netscratch/$USER/envs/xai_torch_v$IMAGE_VER.sqsh
 WORK_DIR=$SCRIPT_DIR/../../
 MOUNTS=/netscratch/$USER:/netscratch/$USER,/ds:/ds,/home/$USER/:/home/$USER/
 CACHE_DIR=/netscratch/$USER/cache
-PYTHON_PATH=$WORK_DIR/src:$WORK_DIR/external/TORCH_FUSION/src
-TORCH_FUSION_OUTPUT_DIR=/netscratch/$USER/TORCH_FUSION
+PYTHON_PATH=$WORK_DIR/src:$WORK_DIR/external/torchfusion/src
+TORCH_FUSION_OUTPUT_DIR=/netscratch/$USER/torchfusion
 EXPORTS="TERM=linux,NCCL_SOCKET_IFNAME=bond,NCCL_IB_HCA=mlx5,ROOT_DIR=/,USER_DIR=$USER,TORCH_FUSION_CACHE_DIR=$CACHE_DIR,TORCH_FUSION_OUTPUT_DIR=$TORCH_FUSION_OUTPUT_DIR,PYTHONPATH=$PYTHON_PATH,TORCH_HOME=$CACHE_DIR/pretrained"
 NODES=1
 TASKS=1
 GPUS_PER_TASK=1
-CPUS_PER_TASK=4
+CPUS_PER_TASK=16
 PARTITION=batch
 MEMORY=100
 ARRAY=0
@@ -111,7 +112,6 @@ export NCCL_DEBUG=INFO
 export PYTHONFAULTHANDLER=1
 
 MEMORY=$(($MEMORY * $TASKS))
-# --task-prolog=./scripts/slurm/install.sh \
 if [ $GPUS_PER_TASK == 0 ]; then
     sbatch --array=$ARRAY --job-name=$JOB_NAME --nodes=$NODES \
         --ntasks-per-node=$(($TASKS / $NODES)) \
@@ -122,6 +122,7 @@ if [ $GPUS_PER_TASK == 0 ]; then
         --output="$TORCH_FUSION_OUTPUT_DIR/slurm_logs/${JOB_NAME}_%a.txt" \
         --wrap "srun \
                 --container-image=$IMAGE \
+                --task-prolog=$WORK_DIR/scripts/slurm/install.sh \
                 --container-workdir=$WORK_DIR \
                 --container-mounts=$MOUNTS \
                 --export=$EXPORTS \
@@ -138,6 +139,7 @@ else
         --output="$TORCH_FUSION_OUTPUT_DIR/slurm_logs/${JOB_NAME}_%a.txt" \
         --wrap "srun \
                 --container-image=$IMAGE \
+                --task-prolog=$WORK_DIR/scripts/slurm/install.sh \
                 --container-workdir=$WORK_DIR \
                 --container-mounts=$MOUNTS \
                 --export=$EXPORTS \

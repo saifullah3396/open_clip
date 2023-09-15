@@ -1,0 +1,1 @@
+./scripts/slurm/sbatch_run.sh --job-name=clp --array=0-1%2 --partition=RTXA6000 --cmd="./scripts/slurm/run.sh ./experiments/train_doc_clip.sh"

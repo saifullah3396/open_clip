@@ -8,7 +8,7 @@ if [[ $SLURM_LOCALID == 0 ]]; then
   # pip install fire
 
   # # install python dependencies
-  # pip install -r $SCRIPT_DIR/../../cluster_requirements.txt
+  pip install -r $SCRIPT_DIR/../../requirements-training.txt
 
   # # install libraries
   # apt update
